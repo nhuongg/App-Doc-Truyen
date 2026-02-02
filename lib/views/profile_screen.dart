@@ -4,6 +4,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
 import '../viewmodels/auth_provider.dart';
 import '../viewmodels/story_provider.dart';
 import '../viewmodels/theme_provider.dart';
@@ -18,13 +21,86 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  String? _avatarPath;
+  String _displayName = 'Người dùng';
+  final ImagePicker _picker = ImagePicker();
+
   @override
   void initState() {
     super.initState();
-    // Tải danh sách yêu thích
+    _loadProfile();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<StoryProvider>(context, listen: false).loadFavorites();
     });
+  }
+
+  Future<void> _loadProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _avatarPath = prefs.getString('avatar_path');
+      _displayName = prefs.getString('display_name') ?? 'Người dùng';
+    });
+  }
+
+  Future<void> _saveProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_avatarPath != null) {
+      await prefs.setString('avatar_path', _avatarPath!);
+    }
+    await prefs.setString('display_name', _displayName);
+  }
+
+  Future<void> _pickAvatar() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      // Lưu ảnh vào thư mục app
+      final appDir = await getApplicationDocumentsDirectory();
+      final avatarDir = Directory('${appDir.path}/profile');
+      if (!await avatarDir.exists()) {
+        await avatarDir.create(recursive: true);
+      }
+      final newPath = '${avatarDir.path}/avatar.jpg';
+      await File(image.path).copy(newPath);
+
+      setState(() {
+        _avatarPath = newPath;
+      });
+      await _saveProfile();
+    }
+  }
+
+  Future<void> _editName() async {
+    final controller = TextEditingController(text: _displayName);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Đổi tên hiển thị'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Tên của bạn',
+            hintText: 'Nhập tên hiển thị',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Lưu'),
+          ),
+        ],
+      ),
+    );
+    if (newName != null && newName.isNotEmpty) {
+      setState(() {
+        _displayName = newName;
+      });
+      await _saveProfile();
+    }
   }
 
   Future<void> _logout() async {
@@ -82,25 +158,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: Icon(
-                    Icons.person,
-                    size: 50,
-                    color: Theme.of(context).colorScheme.onPrimary,
+                // Avatar với nút chỉnh sửa
+                GestureDetector(
+                  onTap: _pickAvatar,
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        backgroundImage:
+                            _avatarPath != null &&
+                                File(_avatarPath!).existsSync()
+                            ? FileImage(File(_avatarPath!))
+                            : null,
+                        child:
+                            _avatarPath == null ||
+                                !File(_avatarPath!).existsSync()
+                            ? Icon(
+                                Icons.person,
+                                size: 50,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              )
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.secondary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.camera_alt,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.onSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  authProvider.user?.email ?? 'Người dùng',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                // Tên hiển thị với nút chỉnh sửa
+                GestureDetector(
+                  onTap: _editName,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _displayName,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.edit,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Thành viên',
+                  authProvider.user?.email ?? 'Thành viên',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),

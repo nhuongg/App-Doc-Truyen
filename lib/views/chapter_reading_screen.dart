@@ -134,10 +134,11 @@ class _ChapterReadingScreenState extends State<ChapterReadingScreen> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.black,
-                      Colors.black.withValues(alpha: 0.85),
+                      Colors.black.withValues(alpha: 0.95),
+                      Colors.black.withValues(alpha: 0.75),
                       Colors.transparent,
                     ],
-                    stops: const [0.0, 0.6, 1.0],
+                    stops: const [0.2, 0.5, 0.9, 1.0],
                   ),
                 ),
                 child: AppBar(
@@ -176,15 +177,15 @@ class _ChapterReadingScreenState extends State<ChapterReadingScreen> {
             // Bottom navigation bar
             AnimatedPositioned(
               duration: const Duration(milliseconds: 200),
-              bottom: _showControls ? 0 : -120,
+              bottom: _showControls ? 0 : -140,
               left: 0,
               right: 0,
               child: Container(
                 padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).padding.bottom + 8,
-                  top: 16,
-                  left: 16,
-                  right: 16,
+                  bottom: MediaQuery.of(context).padding.bottom + 12,
+                  top: 24,
+                  left: 8,
+                  right: 8,
                 ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -192,52 +193,67 @@ class _ChapterReadingScreenState extends State<ChapterReadingScreen> {
                     end: Alignment.topCenter,
                     colors: [
                       Colors.black,
-                      Colors.black.withValues(alpha: 0.9),
+                      Colors.black.withValues(alpha: 0.95),
+                      Colors.black.withValues(alpha: 0.7),
                       Colors.transparent,
                     ],
-                    stops: const [0.0, 0.7, 1.0],
+                    stops: const [0.0, 0.5, 0.8, 1.0],
                   ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     // Nút Home
-                    _buildNavButton(
-                      Icons.home,
-                      'Trang chủ',
-                      () =>
-                          Navigator.popUntil(context, (route) => route.isFirst),
+                    Flexible(
+                      child: _buildNavButton(
+                        Icons.home,
+                        'Trang chủ',
+                        () => Navigator.popUntil(
+                          context,
+                          (route) => route.isFirst,
+                        ),
+                      ),
                     ),
 
                     // Nút chapter trước
-                    _buildNavButton(
-                      Icons.chevron_left,
-                      'Chap trước',
-                      _nextChapter != null
-                          ? () => _goToChapter(_nextChapter!)
-                          : null,
+                    Flexible(
+                      child: _buildNavButton(
+                        Icons.chevron_left,
+                        'Chap trước',
+                        _nextChapter != null
+                            ? () => _goToChapter(_nextChapter!)
+                            : null,
+                      ),
                     ),
 
                     // Dropdown chọn chapter
-                    _buildChapterSelector(),
+                    Flexible(flex: 2, child: _buildChapterSelector()),
 
                     // Nút chapter sau
-                    _buildNavButton(
-                      Icons.chevron_right,
-                      'Chap sau',
-                      _previousChapter != null
-                          ? () => _goToChapter(_previousChapter!)
-                          : null,
+                    Flexible(
+                      child: _buildNavButton(
+                        Icons.chevron_right,
+                        'Chap sau',
+                        _previousChapter != null
+                            ? () => _goToChapter(_previousChapter!)
+                            : null,
+                      ),
                     ),
 
                     // Nút scroll to top
-                    _buildNavButton(Icons.vertical_align_top, 'Lên đầu', () {
-                      _scrollController.animateTo(
-                        0,
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeOut,
-                      );
-                    }),
+                    Flexible(
+                      child: _buildNavButton(
+                        Icons.vertical_align_top,
+                        'Lên đầu',
+                        () {
+                          _scrollController.animateTo(
+                            0,
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeOut,
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ),

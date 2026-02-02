@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import '../models/story.dart';
 import '../models/chapter.dart';
+import '../models/comment.dart';
 import '../services/database_helper.dart';
 
 class StoryProvider with ChangeNotifier {
@@ -311,5 +312,60 @@ class StoryProvider with ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  // ==================== COMMENTS OPERATIONS ====================
+
+  List<Comment> _currentComments = [];
+
+  List<Comment> get currentComments => _currentComments;
+
+  // Tải comments của truyện
+  Future<void> loadComments(int storyId) async {
+    try {
+      _currentComments = await _dbHelper.getCommentsByStoryId(storyId);
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Không thể tải bình luận.';
+      notifyListeners();
+    }
+  }
+
+  // Thêm bình luận mới
+  Future<bool> addComment(
+    int storyId,
+    String username,
+    String content, {
+    String? avatarPath,
+  }) async {
+    try {
+      final comment = Comment(
+        storyId: storyId,
+        username: username,
+        avatarPath: avatarPath,
+        content: content,
+        createdAt: DateTime.now(),
+      );
+      await _dbHelper.insertComment(comment);
+      await loadComments(storyId);
+      return true;
+    } catch (e) {
+      _errorMessage = 'Không thể thêm bình luận.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Xóa bình luận
+  Future<bool> deleteComment(int commentId, int storyId) async {
+    try {
+      await _dbHelper.deleteComment(commentId);
+      await loadComments(storyId);
+      return true;
+    } catch (e) {
+      _errorMessage = 'Không thể xóa bình luận.';
+      notifyListeners();
+      return false;
+    }
   }
 }

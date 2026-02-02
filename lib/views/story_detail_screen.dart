@@ -5,8 +5,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/story.dart';
 import '../models/chapter.dart';
+import '../models/comment.dart';
 import '../viewmodels/story_provider.dart';
 import 'chapter_reading_screen.dart';
 import 'chapter_form_screen.dart';
@@ -22,21 +24,47 @@ class StoryDetailScreen extends StatefulWidget {
 
 class _StoryDetailScreenState extends State<StoryDetailScreen> {
   bool _isDescriptionExpanded = false;
+  final TextEditingController _commentController = TextEditingController();
+  String _userName = 'Người dùng';
+  String? _userAvatar;
 
   @override
   void initState() {
     super.initState();
-    // Tải danh sách chapters
+    _loadUserInfo();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<StoryProvider>(
-        context,
-        listen: false,
-      ).loadChapters(widget.story.id!);
-      Provider.of<StoryProvider>(
-        context,
-        listen: false,
-      ).incrementViews(widget.story.id!);
+      final provider = Provider.of<StoryProvider>(context, listen: false);
+      provider.loadChapters(widget.story.id!);
+      provider.loadComments(widget.story.id!);
+      provider.incrementViews(widget.story.id!);
     });
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadUserInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('display_name') ?? 'Người dùng';
+      _userAvatar = prefs.getString('avatar_path');
+    });
+  }
+
+  Future<void> _addComment() async {
+    if (_commentController.text.trim().isEmpty) return;
+
+    final provider = Provider.of<StoryProvider>(context, listen: false);
+    await provider.addComment(
+      widget.story.id!,
+      _userName,
+      _commentController.text.trim(),
+      avatarPath: _userAvatar,
+    );
+    _commentController.clear();
   }
 
   @override
@@ -299,9 +327,149 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
               }, childCount: chapters.length),
             ),
 
+          // Section bình luận
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Divider(height: 32),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.comment,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Bình luận (${storyProvider.currentComments.length})',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Form nhập bình luận
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundImage:
+                            _userAvatar != null &&
+                                File(_userAvatar!).existsSync()
+                            ? FileImage(File(_userAvatar!))
+                            : null,
+                        child:
+                            _userAvatar == null ||
+                                !File(_userAvatar!).existsSync()
+                            ? const Icon(Icons.person, size: 20)
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _commentController,
+                          decoration: InputDecoration(
+                            hintText: 'Viết bình luận...',
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.send),
+                              onPressed: _addComment,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          maxLines: 1,
+                          onSubmitted: (_) => _addComment(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+
+          // Danh sách bình luận
+          if (storyProvider.currentComments.isEmpty)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(
+                  child: Text('Chưa có bình luận nào. Hãy là người đầu tiên!'),
+                ),
+              ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final comment = storyProvider.currentComments[index];
+                return _buildCommentTile(comment);
+              }, childCount: storyProvider.currentComments.length),
+            ),
+
           // Padding bottom
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCommentTile(Comment comment) {
+    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundImage:
+                  comment.avatarPath != null &&
+                      File(comment.avatarPath!).existsSync()
+                  ? FileImage(File(comment.avatarPath!))
+                  : null,
+              child:
+                  comment.avatarPath == null ||
+                      !File(comment.avatarPath!).existsSync()
+                  ? const Icon(Icons.person, size: 18)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        comment.username,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        dateFormat.format(comment.createdAt),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(comment.content),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

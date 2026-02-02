@@ -75,17 +75,38 @@ class ThemeProvider with ChangeNotifier {
     ),
   );
 
-  // Dark Theme - định nghĩa static để không tạo lại mỗi lần
+  // Dark Theme - Điều chỉnh sáng hơn để dễ đọc
   static final ThemeData darkTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color(0xFF6750A4),
-      brightness: Brightness.dark,
+    colorScheme: const ColorScheme.dark(
+      primary: Color(0xFFBB86FC),
+      onPrimary: Color(0xFF1F1F1F),
+      primaryContainer: Color(0xFF4A3B6B),
+      onPrimaryContainer: Color(0xFFE8DEF8),
+      secondary: Color(0xFF03DAC6),
+      onSecondary: Color(0xFF1F1F1F),
+      secondaryContainer: Color(0xFF1E4E4A),
+      onSecondaryContainer: Color(0xFFA7F3EE),
+      tertiary: Color(0xFFFFB74D),
+      onTertiary: Color(0xFF1F1F1F),
+      tertiaryContainer: Color(0xFF5D4037),
+      onTertiaryContainer: Color(0xFFFFE0B2),
+      error: Color(0xFFCF6679),
+      onError: Color(0xFF1F1F1F),
+      surface: Color(0xFF2D2D2D), // Nền sáng hơn (trước: 0xFF121212)
+      onSurface: Color(0xFFEEEEEE), // Text sáng hơn
+      surfaceContainerHighest: Color(0xFF3D3D3D),
+      onSurfaceVariant: Color(0xFFCACACA), // Text phụ sáng hơn
     ),
-    appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
+    appBarTheme: const AppBarTheme(
+      centerTitle: true,
+      elevation: 0,
+      backgroundColor: Color(0xFF2D2D2D),
+    ),
     cardTheme: CardThemeData(
       elevation: 2,
+      color: const Color(0xFF3A3A3A), // Card sáng hơn
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
@@ -93,6 +114,7 @@ class ThemeProvider with ChangeNotifier {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
+      fillColor: const Color(0xFF3A3A3A),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
@@ -102,5 +124,6 @@ class ThemeProvider with ChangeNotifier {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     ),
+    scaffoldBackgroundColor: const Color(0xFF252525), // Nền scaffold sáng hơn
   );
 }

@@ -30,8 +30,8 @@ class _ChapterEditScreenState extends State<ChapterEditScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
   List<ChapterImage> _existingImages = [];
-  List<File> _newImages = [];
-  List<int> _imagesToDelete = []; // IDs của ảnh cần xóa
+  final List<File> _newImages = [];
+  final List<int> _imagesToDelete = []; // IDs của ảnh cần xóa
   bool _isLoading = false;
 
   @override

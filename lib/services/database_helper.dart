@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/story.dart';
 import '../models/chapter.dart';
+import '../models/comment.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -25,8 +26,31 @@ class DatabaseHelper {
 
   // Khởi tạo database
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'stories_database_v2.db');
-    return await openDatabase(path, version: 2, onCreate: _onCreate);
+    String path = join(await getDatabasesPath(), 'stories_database_v3.db');
+    return await openDatabase(
+      path,
+      version: 3,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
+  }
+
+  // Upgrade database khi thay đổi version
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 3) {
+      // Thêm bảng comments nếu chưa có
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS comments(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          story_id INTEGER NOT NULL,
+          username TEXT NOT NULL,
+          avatar_path TEXT,
+          content TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (story_id) REFERENCES stories(id) ON DELETE CASCADE
+        )
+      ''');
+    }
   }
 
   // Tạo các bảng
@@ -67,6 +91,19 @@ class DatabaseHelper {
         image_path TEXT NOT NULL,
         order_index INTEGER NOT NULL,
         FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Bảng comments
+    await db.execute('''
+      CREATE TABLE comments(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        story_id INTEGER NOT NULL,
+        username TEXT NOT NULL,
+        avatar_path TEXT,
+        content TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (story_id) REFERENCES stories(id) ON DELETE CASCADE
       )
     ''');
 
@@ -342,6 +379,38 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [imageId],
     );
+  }
+
+  // ==================== COMMENTS ====================
+
+  // Thêm bình luận mới
+  Future<int> insertComment(Comment comment) async {
+    final db = await database;
+    return await db.insert('comments', {
+      'story_id': comment.storyId,
+      'username': comment.username,
+      'avatar_path': comment.avatarPath,
+      'content': comment.content,
+      'created_at': comment.createdAt.toIso8601String(),
+    });
+  }
+
+  // Lấy tất cả bình luận của truyện
+  Future<List<Comment>> getCommentsByStoryId(int storyId) async {
+    final db = await database;
+    final maps = await db.query(
+      'comments',
+      where: 'story_id = ?',
+      whereArgs: [storyId],
+      orderBy: 'created_at DESC',
+    );
+    return List.generate(maps.length, (i) => Comment.fromMap(maps[i]));
+  }
+
+  // Xóa bình luận
+  Future<int> deleteComment(int commentId) async {
+    final db = await database;
+    return await db.delete('comments', where: 'id = ?', whereArgs: [commentId]);
   }
 
   // Đóng database
