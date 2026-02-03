@@ -1,18 +1,157 @@
-# flutter_app_doctruyen
+# 📖 Flutter App Đọc Truyện
 
-A new Flutter project.
+Ứng dụng đọc truyện tranh (manga) được xây dựng bằng Flutter với Firebase Authentication và SQLite database.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🚀 Tính năng chính
 
-A few resources to get you started if this is your first Flutter project:
+- 🔐 **Đăng nhập/Đăng ký** với Firebase Auth
+- 📚 **Quản lý truyện**: Thêm, sửa, xóa truyện
+- 📑 **Quản lý chương**: Thêm chương với nhiều ảnh
+- 📖 **Đọc truyện**: Xem chương với điều hướng mượt mà
+- ❤️ **Yêu thích**: Lưu truyện yêu thích
+- 📜 **Lịch sử đọc**: Theo dõi chương đã đọc
+- 💬 **Bình luận**: Bình luận trên từng truyện
+- 🌙 **Dark mode**: Chế độ sáng/tối
+- 👤 **Hồ sơ**: Đổi avatar và tên hiển thị
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 📁 Cấu trúc thư mục
 
+```
+lib/
+├── main.dart                    # Entry point, khởi tạo providers
+├── firebase_options.dart        # Cấu hình Firebase
+│
+├── models/                      # Data models
+│   ├── story.dart               # Model truyện
+│   ├── chapter.dart             # Model chương + ChapterImage
+│   ├── comment.dart             # Model bình luận
+│   └── reading_history.dart     # Model lịch sử đọc
+│
+├── services/                    # Business logic & data access
+│   ├── database_helper.dart     # SQLite CRUD operations
+│   └── firebase_service.dart    # Firebase services
+│
+├── viewmodels/                  # State management (Provider)
+│   ├── auth_provider.dart       # Xử lý đăng nhập/đăng ký
+│   ├── story_provider.dart      # Quản lý truyện, chapters, comments
+│   └── theme_provider.dart      # Quản lý theme sáng/tối
+│
+└── views/                       # UI screens
+    ├── main_navigation.dart     # Bottom navigation chính
+    ├── auth_screen.dart         # Màn hình đăng nhập/đăng ký
+    ├── home_screen.dart         # Trang chủ, danh sách truyện
+    ├── my_stories_screen.dart   # Quản lý truyện của tôi
+    ├── story_form_screen.dart   # Form thêm/sửa truyện
+    ├── story_detail_screen.dart # Chi tiết truyện, danh sách chương
+    ├── chapter_form_screen.dart # Form thêm chương mới
+    ├── chapter_edit_screen.dart # Sửa chương đã có
+    ├── chapter_reading_screen.dart # Màn hình đọc truyện
+    ├── reading_history_screen.dart # Lịch sử đọc
+    ├── profile_screen.dart      # Hồ sơ người dùng
+    └── widgets/                 # Reusable widgets
+        └── story_card.dart      # Card hiển thị truyện
+```
 
+---
+
+## 🏗️ Kiến trúc
+
+Ứng dụng sử dụng mô hình **MVVM** (Model-View-ViewModel):
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         VIEWS                                │
+│  (auth_screen, home_screen, story_detail_screen, ...)       │
+└─────────────────────────┬───────────────────────────────────┘
+                          │ Provider.of<>
+┌─────────────────────────▼───────────────────────────────────┐
+│                      VIEWMODELS                              │
+│  (auth_provider, story_provider, theme_provider)            │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+┌─────────────────────────▼───────────────────────────────────┐
+│                       SERVICES                               │
+│  (database_helper, firebase_service)                        │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+┌─────────────────────────▼───────────────────────────────────┐
+│                        MODELS                                │
+│  (Story, Chapter, Comment, ReadingHistory)                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🗄️ Database Schema
+
+```sql
+-- Bảng truyện
+stories(id, title, author, description, cover_image, status, genres, is_favorite, view_count, created_at)
+
+-- Bảng chương
+chapters(id, story_id, chapter_number, title, created_at)
+
+-- Bảng ảnh chương
+chapter_images(id, chapter_id, image_path, order_index)
+
+-- Bảng bình luận
+comments(id, story_id, username, avatar_path, content, created_at)
+
+-- Bảng lịch sử đọc
+reading_history(id, story_id, chapter_id, read_at)
+```
+
+---
+
+## 🛠️ Cài đặt
+
+1. **Clone project**
+   ```bash
+   git clone <repo-url>
+   cd flutter_app_doctruyen
+   ```
+
+2. **Cài dependencies**
+   ```bash
+   flutter pub get
+   ```
+
+3. **Cấu hình Firebase**
+   - Tạo file `.env` với các key Firebase (xem `firebase_options.dart`)
+   - Đảm bảo `google-services.json` trong `android/app/`
+
+4. **Chạy ứng dụng**
+   ```bash
+   flutter run
+   ```
+
+---
+
+## 📦 Dependencies chính
+
+| Package | Mục đích |
+|---------|----------|
+| `provider` | State management |
+| `sqflite` | SQLite database |
+| `firebase_auth` | Authentication |
+| `firebase_core` | Firebase core |
+| `image_picker` | Chọn ảnh từ gallery |
+| `shared_preferences` | Lưu settings local |
+| `path_provider` | Đường dẫn file system |
+| `intl` | Format ngày tháng |
+
+---
+
+## 📱 Screenshots
+
+*Thêm screenshots của ứng dụng tại đây*
+
+---
+
+## 📄 License
+
+MIT License
