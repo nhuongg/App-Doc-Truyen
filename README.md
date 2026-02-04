@@ -176,6 +176,6 @@ reading_history(id, story_id, chapter_id, read_at)
 
 ---
 
-## 📄 License
+## 📄 Nguyen Van Huong License
 
-Nguyen Van Huong License
+
