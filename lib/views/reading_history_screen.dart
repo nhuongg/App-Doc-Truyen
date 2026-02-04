@@ -49,12 +49,6 @@ class _ReadingHistoryScreenState extends State<ReadingHistoryScreen>
       appBar: AppBar(
         title: const Text('Lịch Sử Đọc'),
         actions: [
-          // Nút refresh
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Làm mới',
-            onPressed: _loadHistory,
-          ),
           IconButton(
             icon: const Icon(Icons.delete_sweep),
             tooltip: 'Xóa tất cả lịch sử',
@@ -68,7 +62,7 @@ class _ReadingHistoryScreenState extends State<ReadingHistoryScreen>
             return const Center(child: CircularProgressIndicator());
           }
 
-          // Luôn cho phép pull-to-refresh, kể cả khi rỗng
+          // Luôn cho phép pull-to-refresh, kể cả khi ko có gì
           return RefreshIndicator(
             onRefresh: () => provider.loadReadingHistory(),
             child: provider.readingHistory.isEmpty
