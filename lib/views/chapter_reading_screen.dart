@@ -209,58 +209,90 @@ class _ChapterReadingScreenState extends State<ChapterReadingScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    // Nút Home
-                    Flexible(
-                      child: _buildNavButton(
-                        Icons.home,
-                        'Trang chủ',
-                        () => Navigator.popUntil(
-                          context,
-                          (route) => route.isFirst,
-                        ),
-                      ),
+                    // Nút Home (chỉ icon)
+                    _buildIconOnlyButton(
+                      Icons.home,
+                      () =>
+                          Navigator.popUntil(context, (route) => route.isFirst),
                     ),
 
-                    // Nút chapter trước
-                    Flexible(
-                      child: _buildNavButton(
-                        Icons.chevron_left,
-                        'Chap trước',
-                        _nextChapter != null
-                            ? () => _goToChapter(_nextChapter!)
-                            : null,
-                      ),
+                    // Nút chapter trước (chỉ icon)
+                    _buildIconOnlyButton(
+                      Icons.chevron_left,
+                      _nextChapter != null
+                          ? () => _goToChapter(_nextChapter!)
+                          : null,
                     ),
 
                     // Dropdown chọn chapter
                     Flexible(flex: 2, child: _buildChapterSelector()),
 
-                    // Nút chapter sau
-                    Flexible(
-                      child: _buildNavButton(
-                        Icons.chevron_right,
-                        'Chap sau',
-                        _previousChapter != null
-                            ? () => _goToChapter(_previousChapter!)
-                            : null,
-                      ),
+                    // Nút chapter sau (chỉ icon)
+                    _buildIconOnlyButton(
+                      Icons.chevron_right,
+                      _previousChapter != null
+                          ? () => _goToChapter(_previousChapter!)
+                          : null,
                     ),
 
-                    // Nút scroll to top
-                    Flexible(
-                      child: _buildNavButton(
-                        Icons.vertical_align_top,
-                        'Lên đầu',
-                        () {
-                          _scrollController.animateTo(
-                            0,
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.easeOut,
-                          );
-                        },
-                      ),
+                    // Nút yêu thích - lấy trạng thái từ provider để đồng bộ
+                    Consumer<StoryProvider>(
+                      builder: (context, storyProvider, child) {
+                        // Lấy story hiện tại từ provider để đồng bộ trạng thái
+                        final currentStory = storyProvider.stories.firstWhere(
+                          (s) => s.id == widget.story.id,
+                          orElse: () => widget.story,
+                        );
+                        final isFavorite = currentStory.isFavorite;
+                        return _buildIconOnlyButton(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          () async {
+                            await storyProvider.toggleFavorite(currentStory);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    !isFavorite
+                                        ? 'Đã yêu thích truyện'
+                                        : 'Hủy yêu thích truyện',
+                                  ),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            }
+                          },
+                        );
+                      },
                     ),
                   ],
+                ),
+              ),
+            ),
+
+            // Floating scroll to top button
+            Positioned(
+              right: 16,
+              bottom: MediaQuery.of(context).padding.bottom + 100,
+              child: GestureDetector(
+                onTap: () {
+                  _scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeOut,
+                  );
+                },
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.keyboard_arrow_up,
+                    color: Colors.white.withValues(alpha: 0.8),
+                    size: 28,
+                  ),
                 ),
               ),
             ),
@@ -299,31 +331,18 @@ class _ChapterReadingScreenState extends State<ChapterReadingScreen> {
     );
   }
 
-  Widget _buildNavButton(IconData icon, String label, VoidCallback? onPressed) {
+  Widget _buildIconOnlyButton(IconData icon, VoidCallback? onPressed) {
     final isEnabled = onPressed != null;
 
     return InkWell(
       onTap: onPressed,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isEnabled ? Colors.white : Colors.white38,
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isEnabled ? Colors.white : Colors.white38,
-                fontSize: 10,
-              ),
-            ),
-          ],
+        padding: const EdgeInsets.all(12),
+        child: Icon(
+          icon,
+          color: isEnabled ? Colors.white : Colors.white38,
+          size: 28,
         ),
       ),
     );
@@ -334,7 +353,7 @@ class _ChapterReadingScreenState extends State<ChapterReadingScreen> {
     final chapters = storyProvider.currentChapters;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white24,
         borderRadius: BorderRadius.circular(8),
@@ -343,7 +362,8 @@ class _ChapterReadingScreenState extends State<ChapterReadingScreen> {
         value: widget.chapter.id,
         dropdownColor: Colors.grey[900],
         underline: const SizedBox(),
-        icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+        isDense: true,
+        icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
         items: chapters.map((chapter) {
           return DropdownMenuItem<int>(
             value: chapter.id,

@@ -271,10 +271,16 @@ class _OTruyenDetailScreenState extends State<OTruyenDetailScreen> {
                     if (story.chapters.isNotEmpty)
                       TextButton.icon(
                         icon: const Icon(Icons.play_arrow, size: 20),
+                        // Chỉnh đỡ bị lỗi overflow
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         label: const Text('Đọc từ đầu'),
                         onPressed: () => _openChapter(
-                          story.chapters.last,
-                          story.chapters.length - 1,
+                          story.chapters.first,
+                          0,
                         ),
                       ),
                   ],

@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/otruyen_models.dart';
 import '../services/otruyen_api_service.dart';
 
@@ -89,12 +90,16 @@ class _OTruyenReadingScreenState extends State<OTruyenReadingScreen> {
     }
   }
 
-  bool get _hasPrevious => _currentIndex < widget.chapters.length - 1;
-  bool get _hasNext => _currentIndex > 0;
+  // "Về trước" = quay lại chapter trước = lower index
+  // "Tiếp theo" = chuyển sang chapter sau = higher index
+  // chuyển hết trên này qua tiếng việt
+  bool get _hasPrevious => _currentIndex > 0;
+  bool get _hasNext => _currentIndex < widget.chapters.length - 1;
 
   void _goToPrevious() {
+    // Go to previous chapter (e.g., from chapter 5 to chapter 4)
     if (!_hasPrevious) return;
-    _currentIndex++;
+    _currentIndex--;
     final chapter = widget.chapters[_currentIndex];
     _currentChapterApiData = chapter.chapterApiData;
     _currentChapterName = chapter.displayName;
@@ -102,8 +107,9 @@ class _OTruyenReadingScreenState extends State<OTruyenReadingScreen> {
   }
 
   void _goToNext() {
+    // Go to next chapter (e.g., from chapter 4 to chapter 5)
     if (!_hasNext) return;
-    _currentIndex--;
+    _currentIndex++;
     final chapter = widget.chapters[_currentIndex];
     _currentChapterApiData = chapter.chapterApiData;
     _currentChapterName = chapter.displayName;
@@ -237,71 +243,99 @@ class _OTruyenReadingScreenState extends State<OTruyenReadingScreen> {
                         ),
                       ],
                     ),
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Icons.list),
-                        onPressed: _showChapterList,
-                        tooltip: 'Danh sách chương',
-                      ),
-                    ],
                   ),
                 ),
               ),
             ),
 
-            // Bottom bar
+            // Bottom navigation bar
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
               child: Container(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).padding.bottom + 12,
+                  top: 24,
+                  left: 8,
+                  right: 8,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [Colors.black87, Colors.transparent],
+                    colors: [
+                      Colors.black,
+                      Colors.black.withValues(alpha: 0.95),
+                      Colors.black.withValues(alpha: 0.7),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.5, 0.8, 1.0],
                   ),
                 ),
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Nút Home (chỉ icon) - bên trái
+                    _buildIconOnlyButton(
+                      Icons.home,
+                      () =>
+                          Navigator.popUntil(context, (route) => route.isFirst),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: _hasPrevious ? _goToPrevious : null,
-                          icon: const Icon(Icons.chevron_left),
-                          label: const Text('Chương trước'),
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.white24,
-                          ),
-                        ),
-                        if (_chapterContent != null)
-                          Text(
-                            '${_chapterContent!.pages.length} trang',
-                            style: const TextStyle(color: Colors.white70),
-                          ),
-                        ElevatedButton.icon(
-                          onPressed: _hasNext ? _goToNext : null,
-                          icon: const Icon(Icons.chevron_right),
-                          label: const Text('Chương sau'),
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.white24,
-                          ),
-                        ),
-                      ],
+
+                    // Nút chapter trước (chỉ icon)
+                    _buildIconOnlyButton(
+                      Icons.chevron_left,
+                      _hasPrevious ? _goToPrevious : null,
                     ),
-                  ),
+
+                    // Dropdown chọn chapter
+                    Flexible(flex: 2, child: _buildChapterSelector()),
+
+                    // Nút chapter sau (chỉ icon)
+                    _buildIconOnlyButton(
+                      Icons.chevron_right,
+                      _hasNext ? _goToNext : null,
+                    ),
+
+                    // Nút yêu thích (disabled cho truyện online) - bên phải
+                    _buildIconOnlyButton(
+                      Icons.favorite_border,
+                      null, // Disabled cho truyện online
+                    ),
+                  ],
                 ),
               ),
             ),
           ],
+
+          // Floating scroll to top button
+          Positioned(
+            right: 16,
+            bottom: MediaQuery.of(context).padding.bottom + 100,
+            child: GestureDetector(
+              onTap: () {
+                _scrollController.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOut,
+                );
+              },
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.keyboard_arrow_up,
+                  color: Colors.white.withValues(alpha: 0.8),
+                  size: 28,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -351,26 +385,17 @@ class _OTruyenReadingScreenState extends State<OTruyenReadingScreen> {
       itemCount: pages.length,
       itemBuilder: (context, index) {
         final page = pages[index];
-        return Image.network(
-          page.imageUrl,
+        return CachedNetworkImage(
+          imageUrl: page.imageUrl,
           fit: BoxFit.fitWidth,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              height: 200,
-              color: Colors.grey[900],
-              child: Center(
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
-                      : null,
-                  color: Colors.white,
-                ),
-              ),
-            );
-          },
-          errorBuilder: (_, __, ___) => Container(
+          placeholder: (context, url) => Container(
+            height: 200,
+            color: Colors.grey[900],
+            child: const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            ),
+          ),
+          errorWidget: (context, url, error) => Container(
             height: 200,
             color: Colors.grey[900],
             child: const Center(
@@ -389,6 +414,62 @@ class _OTruyenReadingScreenState extends State<OTruyenReadingScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildIconOnlyButton(IconData icon, VoidCallback? onPressed) {
+    final isEnabled = onPressed != null;
+
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Icon(
+          icon,
+          color: isEnabled ? Colors.white : Colors.white38,
+          size: 28,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChapterSelector() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: DropdownButton<int>(
+        value: _currentIndex,
+        dropdownColor: Colors.grey[900],
+        underline: const SizedBox(),
+        isDense: true,
+        icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
+        items: widget.chapters.asMap().entries.map((entry) {
+          final index = entry.key;
+          final chapter = entry.value;
+          return DropdownMenuItem<int>(
+            value: index,
+            child: Text(
+              'Chương ${chapter.chapterName}',
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          );
+        }).toList(),
+        onChanged: (index) {
+          if (index != null && index != _currentIndex) {
+            final chapter = widget.chapters[index];
+            setState(() {
+              _currentIndex = index;
+              _currentChapterApiData = chapter.chapterApiData;
+              _currentChapterName = chapter.displayName;
+            });
+            _loadChapter();
+          }
+        },
+      ),
     );
   }
 }

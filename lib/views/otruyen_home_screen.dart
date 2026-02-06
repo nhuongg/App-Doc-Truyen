@@ -181,6 +181,7 @@ class _OTruyenHomeScreenState extends State<OTruyenHomeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 25,
         title: const Text('Truyện Online'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         bottom: TabBar(
