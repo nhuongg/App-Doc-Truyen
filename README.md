@@ -118,9 +118,27 @@ reading_history(id, story_id, chapter_id, read_at)
    flutter pub get
    ```
 
-3. **Cấu hình Firebase**
-   - Tạo file `.env` với các key Firebase (xem `lib/firebase_options.dart`)
-   - Đảm bảo `google-services.json` trong `android/app/`
+3. **Cấu hình Firebase** ⚠️ **BẮT BUỘC**
+   
+   > **Lưu ý:** Bạn cần tạo Firebase project riêng và lấy API key của bạn.
+   > File `.env` không được đẩy lên GitHub vì chứa thông tin bí mật.
+
+   **Bước 1:** Tạo project trên [Firebase Console](https://console.firebase.google.com/)
+   
+   **Bước 2:** Bật Authentication → Email/Password
+   
+   **Bước 3:** Tải `google-services.json` và đặt vào `android/app/`
+   
+   **Bước 4:** Tạo file `.env` trong thư mục gốc với nội dung:
+   ```env
+   FIREBASE_API_KEY=your_api_key_here
+   FIREBASE_APP_ID=your_app_id_here
+   FIREBASE_MESSAGING_SENDER_ID=your_sender_id_here
+   FIREBASE_PROJECT_ID=your_project_id_here
+   FIREBASE_STORAGE_BUCKET=your_storage_bucket_here
+   ```
+   
+   > Lấy các giá trị này từ Firebase Console → Project Settings → Your apps
 
 4. **Chạy ứng dụng**
    ```bash
