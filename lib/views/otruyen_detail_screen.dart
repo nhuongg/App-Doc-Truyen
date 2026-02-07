@@ -271,7 +271,7 @@ class _OTruyenDetailScreenState extends State<OTruyenDetailScreen> {
                     if (story.chapters.isNotEmpty)
                       TextButton.icon(
                         icon: const Icon(Icons.play_arrow, size: 20),
-                        // Chỉnh đỡ bị lỗi overflow
+                        // Chỉnh đỡ bị lỗi overflow ;(
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
                           minimumSize: Size.zero,
@@ -298,10 +298,13 @@ class _OTruyenDetailScreenState extends State<OTruyenDetailScreen> {
                       border: Border.all(color: Colors.grey.shade300),
                       borderRadius: BorderRadius.circular(8),
                     ),
+                    // Cuộn danh sách chương
                     child: ListView.builder(
                       itemCount: story.chapters.length,
                       itemBuilder: (context, index) {
-                        final chapter = story.chapters[index];
+                        // Chương mới nhất lên đầu
+                        final reversedIndex = story.chapters.length - 1 - index;
+                        final chapter = story.chapters[reversedIndex];
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundColor: Theme.of(
@@ -320,7 +323,7 @@ class _OTruyenDetailScreenState extends State<OTruyenDetailScreen> {
                           ),
                           trailing: const Icon(Icons.chevron_right, size: 20),
                           dense: true,
-                          onTap: () => _openChapter(chapter, index),
+                          onTap: () => _openChapter(chapter, reversedIndex),
                         );
                       },
                     ),

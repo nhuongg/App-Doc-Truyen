@@ -343,32 +343,32 @@ class _OTruyenReadingScreenState extends State<OTruyenReadingScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    // Nút Home (chỉ icon) - bên trái
+                    // Nút Home  bên trái
                     _buildIconOnlyButton(
                       Icons.home,
                       () =>
                           Navigator.popUntil(context, (route) => route.isFirst),
                     ),
 
-                    // Nút chapter trước (chỉ icon)
+                    // Nút chapter trước 
                     _buildIconOnlyButton(
                       Icons.chevron_left,
                       _hasPrevious ? _goToPrevious : null,
                     ),
 
-                    // Dropdown chọn chapter
+                    // chọn chapter
                     Flexible(flex: 2, child: _buildChapterSelector()),
 
-                    // Nút chapter sau (chỉ icon)
+                    // Nút chapter sau 
                     _buildIconOnlyButton(
                       Icons.chevron_right,
                       _hasNext ? _goToNext : null,
                     ),
 
-                    // Nút yêu thích (disabled cho truyện online) - bên phải
+                    // Nút yêu thích (tắt cho truyện online) - bên phải
                     _buildIconOnlyButton(
                       Icons.favorite_border,
-                      null, // Disabled cho truyện online
+                      null, // tắt cho truyện online
                     ),
                   ],
                 ),
@@ -376,7 +376,7 @@ class _OTruyenReadingScreenState extends State<OTruyenReadingScreen> {
             ),
           ],
 
-          // Floating scroll to top button
+          // nút cuộn lên đầu
           Positioned(
             right: 16,
             bottom: MediaQuery.of(context).padding.bottom + 100,
@@ -515,7 +515,7 @@ class _OTruyenReadingScreenState extends State<OTruyenReadingScreen> {
 }
 
 /// Widget hiển thị ảnh từ database (Hive)
-/// Load từ database nếu có, otherwise download và lưu
+/// Load từ database nếu có, nếu không thì download và lưu
 class _DatabaseImage extends StatefulWidget {
   final String imageUrl;
   final BoxFit fit;
