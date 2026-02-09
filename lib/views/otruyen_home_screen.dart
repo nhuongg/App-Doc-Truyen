@@ -183,7 +183,7 @@ class _OTruyenHomeScreenState extends State<OTruyenHomeScreen>
       appBar: AppBar(
         toolbarHeight: 25,
         title: const Text('Truyện Online'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: const Color.fromARGB(255, 254, 244, 252),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -335,7 +335,7 @@ class _OTruyenHomeScreenState extends State<OTruyenHomeScreen>
                         'Chương ${story.chaptersLatest!.last}',
                         style: TextStyle(
                           fontSize: 11,
-                          color: const Color.fromARGB(255, 255, 114, 222),
+                          color: const Color.fromARGB(255, 205, 0, 157),
                         ),
                       ),
                   ],

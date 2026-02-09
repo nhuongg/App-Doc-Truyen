@@ -114,9 +114,10 @@ class _ChapterReadingScreenState extends State<ChapterReadingScreen> {
             else
               ListView.builder(
                 controller: _scrollController,
+                //Padding top và bottom bằng 10% chiều cao màn hình
                 padding: EdgeInsets.only(
-                  top: _showControls ? 80 : 0,
-                  bottom: _showControls ? 120 : 0,
+                  top: MediaQuery.of(context).padding.top,
+                  bottom: MediaQuery.of(context).padding.bottom,
                 ),
                 itemCount: images.length,
                 itemBuilder: (context, index) {
@@ -275,11 +276,7 @@ class _ChapterReadingScreenState extends State<ChapterReadingScreen> {
               bottom: MediaQuery.of(context).padding.bottom + 100,
               child: GestureDetector(
                 onTap: () {
-                  _scrollController.animateTo(
-                    0,
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeOut,
-                  );
+                  _scrollController.jumpTo(0);
                 },
                 child: Container(
                   width: 44,

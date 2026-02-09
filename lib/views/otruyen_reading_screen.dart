@@ -1,7 +1,6 @@
 // lib/views/otruyen_reading_screen.dart
 // Màn hình đọc chương truyện từ OTruyen API (hiển thị ảnh)
 
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/otruyen_models.dart';
@@ -382,11 +381,7 @@ class _OTruyenReadingScreenState extends State<OTruyenReadingScreen> {
             bottom: MediaQuery.of(context).padding.bottom + 100,
             child: GestureDetector(
               onTap: () {
-                _scrollController.animateTo(
-                  0,
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.easeOut,
-                );
+                _scrollController.jumpTo(0);
               },
               child: Container(
                 width: 40,
