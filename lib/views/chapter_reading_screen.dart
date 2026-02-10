@@ -276,11 +276,7 @@ class _ChapterReadingScreenState extends State<ChapterReadingScreen> {
               bottom: MediaQuery.of(context).padding.bottom + 100,
               child: GestureDetector(
                 onTap: () {
-                  _scrollController.animateTo(
-                    0,
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeOut,
-                  );
+                  _scrollController.jumpTo(0);
                 },
                 child: Container(
                   width: 44,
